@@ -6,8 +6,4 @@ galaxy_info:
 
   min_ansible_version: 2.1
 
-dependencies:
-  - src: https://github.com/mikev1963/pisetup.git
-    scm: git
-    version: main
-    name: pisetup
+dependencies:[]
