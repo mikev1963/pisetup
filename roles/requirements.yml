@@ -1,3 +1,4 @@
 ---
-roles:
-  - name: mikev1963.pisetup
+- src: git@github.com:mikev1963/pisetup.git
+  scm: git
+  name: pisetup
