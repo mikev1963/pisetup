@@ -1,4 +1,3 @@
 ---
-- src: git@github.com:mikev1963/pisetup.git
-  scm: git
-  name: pisetup
+- src: git+https@github.com/mikev1963/pisetup.git
+  version: main
