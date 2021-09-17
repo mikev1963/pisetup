@@ -1,5 +1,7 @@
 ---
-- hosts: pi
+- name: Raspberry PI setup
+  hosts: pi
   become: true
+
   roles:
-    - mikev1963.pisetup
+    - role: mikev1963.pisetup
