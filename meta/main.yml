@@ -1,16 +1,8 @@
 ---
-dependencies:
-  - src: https://github.com/mikev1963/pisetup.git
-    scm: git
-    version: main
-    name: pisetup
-
 galaxy_info:
   role_name: pisetup
   author: Michael Ventarola
   description: pisetup for kubernetees
-  company: "Midwestern Mac, LLC"
-  license: "license (BSD, MIT)"
   min_ansible_version: 2.4
   platforms:
     - name: Debian
@@ -21,3 +13,4 @@ galaxy_info:
   galaxy_tags:
     - system
     - server
+dependencies: []
