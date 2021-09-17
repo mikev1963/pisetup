@@ -1,6 +1,6 @@
 ---
 - name: Raspberry PI setup
-  hosts: pi
+  hosts: all
   become: true
 
   roles:
