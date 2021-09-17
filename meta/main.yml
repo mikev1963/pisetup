@@ -1,5 +1,9 @@
 ---
-dependencies: []
+dependencies:
+  - src: https://github.com/mikev1963/pisetup.git
+    scm: git
+    version: main
+    name: pisetup
 
 galaxy_info:
   role_name: pisetup
