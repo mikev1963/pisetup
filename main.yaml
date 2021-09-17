@@ -1,7 +1,7 @@
 ---
-- name: Raspberry PI setup
+- name: Configure all servers.
   hosts: all
-  become: true
+  become: yes
 
   roles:
-    - role: mikev1963.pisetup
+    - mikev1963.pisetup
