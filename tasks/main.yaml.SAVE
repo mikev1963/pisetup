@@ -1,0 +1,182 @@
+---
+- name: Install Additional Packages
+  ansible.builtin.package:
+    name:
+      - net-tools
+    state: latest
+
+- name: Configure hostname for nodes
+  hostname:
+    name:  "{{ mikeventarola_shortname }}"
+
+- name: Configure Keyboard
+  lineinfile:
+    path: /etc/default/keyboard
+    regex: ^XKBLAYOUT="gb"
+    line: XKBLAYOUT="us"
+
+- name: sets the timezone
+  timezone:
+    name: "{{ raspi_config_timezone }}"
+  notify: restart timezone dependent services
+
+- name: ensure locale {{ system_locale }} exists
+  locale_gen:
+    name: "{{ system_locale }}"
+    state: present
+  when: system_locale is defined
+  notify:
+    - update-locale
+
+- name: set default system locale
+  debconf:
+    name: 'locales'
+    question: 'locales/default_environment_locale'
+    vtype: 'string'
+    value: '{{ system_locale }}'
+  when: system_locale is defined
+  notify:
+    - update-locale
+
+- name: Remove rfkill wifi Error
+  lineinfile:
+    path: /boot/config.txt
+    line: dtoverlay=disable-wifi
+    insertafter: EOF
+  notify:
+    - Reboot server
+      
+- name: Create accouts 
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    groups: "{{ item.groups }}"
+    state: present
+    shell: /bin/bash
+    password: "{{ mikev1963_password }}"
+    append: yes
+    create_home: yes
+  with_items: "{{ user_details }}"
+
+- name: Change the login banner
+  ansible.builtin.template:
+    src: issue.j2
+    dest: /etc/issue
+
+- name: Change Banner option in /etc/ssh/sshd_config
+  ansible.builtin.replace:
+    path: /etc/ssh/sshd_config
+    regexp: '#Banner none'
+    replace: 'Banner /etc/issue'
+  notify:
+    - restart sshd
+
+- name: Change iscsi initiator file
+  ansible.builtin.template:
+    src: initiatorname.iscsi.j2
+    dest: /etc/iscsi/initiatorname.iscsi
+  notify:
+    - Restart iscsi
+
+- name: Perform a discovery on {{ iscsi_ip }} and show available target nodes
+  community.general.open_iscsi:
+    show_nodes: yes
+    discover: yes
+    ip: "{{ iscsi_ip }}"
+  notify:
+    - Restart iscsi
+
+- name: Connect to {{ mikeventarola_iscsi }} after updating the persistent database 
+  community.general.open_iscsi:
+    login: yes
+    auto_node_startup: true
+    #portal: '{{ portal_login }}'
+    portal: "{{ iscsi_ip }}"
+    target: '{{ mikeventarola_iscsi }}'
+  notify:
+    - Restart iscsi
+
+- name: Create a new ext4 partition on iscsi disk
+  community.general.parted:
+    device: /dev/sda
+    number: 1
+    state: present
+    fs_type: ext4
+
+- name: Create a ext4 filesystem on /dev/sda
+  community.general.filesystem:
+    fstype: ext4
+    dev: /dev/sda1
+
+- name: Create mount point for /var/lib/rancher
+  ansible.builtin.file:
+    path: '{{ mount_devices }}'
+    state: directory
+    owner: root
+    group: root
+
+- name: Ensure /var/lib/rancher is  mounted
+  ansible.posix.mount:
+    path: '{{ mount_devices }}'
+    src: /dev/sda1
+    fstype: ext4
+    opts: '{{ item.opts  | default("defaults,nofail") }}'
+    state: '{{ item.state  | default("mounted")  }}'
+    dump: '{{ item.dump | default("0") }}'
+    passno: '{{ item.passno | default("0") }}'
+    fstab: '{{ item.fstab | default("/etc/fstab") }}'
+
+- name: Fix for systemd-modules-load server for iscsi
+  lineinfile:
+    path: /lib/modules-load.d/open-iscsi.conf
+    regex: '^ib_iser'
+    line: '#ib_iser'
+
+- name: Remove files to resize fs
+  ansible.builtin.file:
+    path: /etc/init.d/etc/resize2fs_once
+    state: absent
+
+- name: Remove symbolic Link to resize fs
+  ansible.builtin.file:
+    path: /etc/rc3.d/S01resize2fs_once
+    state: absent
+
+- name: Set up Network Related files
+  ansible.builtin.template:
+    src: "{{ item.template }}"
+    dest: "{{ item.dest }}"
+    mode: 0644
+  with_items:
+    - { template: hosts.j2, dest: /etc/hosts }
+    
+- name: Remove apt-listchanges package
+  ansible.builtin.package:
+    name: apt-listchanges
+    state: absent
+
+- name: Fix apt getting stuck on apt-listchanges
+  lineinfile:
+    path: /etc/apt/listchanges.conf
+    regex: ^frontend="pager"
+    line: frontend="none"
+
+- name: Update all packages to their latest version
+  apt:
+    update_cache: yes
+    name: "*"
+    state: latest
+  notify:
+    - Reboot server
+
+- name: Change root password
+  user:
+    name: root
+    update_password: always
+    password: "{{ root_password }}"
+
+- name: Change pi password
+  user:
+    name: root
+    update_password: always
+    password: "{{ pi_password }}"

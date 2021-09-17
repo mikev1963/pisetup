@@ -1,0 +1,14 @@
+---
+- name: Configure hostname for nodes
+  hostname:
+    name:  "{{ mikeventarola_shortname }}"
+
+- name: Configure Keyboard
+  lineinfile:
+    path: /etc/default/keyboard
+    regex: ^XKBLAYOUT="gb"
+    line: XKBLAYOUT="us"
+
+- name: Configure timezone
+  timezone:
+    name: "{{ raspi_config_timezone }}"

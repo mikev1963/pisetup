@@ -1,0 +1,34 @@
+---
+# sets the amount of time the cache is valid
+apt_cache_valid_time: 3600
+
+# upgrade system: safe | full | dist
+apt_upgrade: dist
+
+# remove packages that are no longer needed for dependencies
+apt_autoremove: yes
+
+# Timezone
+raspi_config_timezone: "America/New_York"
+
+# set global locale
+system_locale: "en_US.UTF-8"
+
+# Mount /var/lib/rancher
+mount_devices: /var/lib/rancher
+
+# iscsi Host
+iscsi_ip: '192.168.1.201'
+iscsi_port: '3260'
+portal_login: '{{ iscsi_ip }}:{{ iscsi_port}}'
+mikeventarola_mac_address: "{{ hostvars[inventory_hostname].ansible_default_ipv4.macaddress }}"
+mikeventarola_hostname: "{{ mac_address_mapping[mikeventarola_mac_address].name }}"
+mikeventarola_shortname: "{{ mikeventarola_hostname.split('.')[0] }}"
+mikeventarola_ip_address: "{{ mac_address_mapping[mikeventarola_mac_address].ip }}"
+mikeventarola_iscsi: "{{ mac_address_mapping[mikeventarola_mac_address].iscsi }}"
+mikeventarola_ip_gateway: "192.168.1.1"
+
+# Google Nameservers
+dns_nameservers:
+  - "8.8.8.8"
+  - "8.8.4.4"
