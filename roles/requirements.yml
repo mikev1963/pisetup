@@ -1,5 +1,3 @@
 ---
-- src: https://github.com/mikev1963/pisetup.git
-  scm: git
-  version: main
-  name: pisetup
+roles:
+  - name: mikev1963.pisetup
